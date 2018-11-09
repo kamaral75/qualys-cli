@@ -80,7 +80,7 @@ class QualysAPIInventory(object):
 
 def main():
   # Get Transfer Requests search property and filter value
-  url_get_hosts = 'https://qualysapi.qg2.apps.qualys.com/api/2.0/fo/asset/host/?action=list&details=Basic'
+  url_get_hosts = qualys_url_get_hosts
 
   qualysAPIInventory = QualysAPIInventory()
   qualysAPIInventory.getHosts(url_get_hosts)
