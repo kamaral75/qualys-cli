@@ -49,7 +49,9 @@ class QualysAPIInventory(object):
           # host.tag is the XML element name and host.text is the XML element value
           host_row[host.tag] = host.text
       # Add each host to list of hosts
-      print(host_row)
+      host_list.append(host_row)
+
+    print(host_list)
 
 
   """ Configure requests module to retry session connection """
