@@ -23,7 +23,6 @@ class QualysAPIInventory(object):
     auth=(qualys_user, qualys_pwd)
     headers={'X-Requested-With':'Python'}
 
-    #https://qualysapi.qg2.apps.qualys.com/api/2.0/fo/asset/host/?action=list&details=Basic
     get_hosts_url = qualys_base_url + 'host/?action=list&details=All'
 
     app_get_response = self.getHTTP(url=get_hosts_url, params='', headers=headers, auth=auth)
