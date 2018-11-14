@@ -18,21 +18,42 @@ class QualysAPIInventory(object):
       filemode='a'
     )
 
-  def getHosts(self, url_get_hosts):
+  def getHosts(self, qualys_base_url):
 
     auth=(qualys_user, qualys_pwd)
     headers={'X-Requested-With':'Python'}
 
-    app_get_response = self.getHTTP(url=url_get_hosts, params='', headers=headers, auth=auth)
+    #https://qualysapi.qg2.apps.qualys.com/api/2.0/fo/asset/host/?action=list&details=Basic
+    get_hosts_url = qualys_base_url + 'host/?action=list&details=All'
+
+    app_get_response = self.getHTTP(url=get_hosts_url, params='', headers=headers, auth=auth)
+
+    if app_get_response is None:
+      print('API Reqest Response empty {}'.format(app_get_response))
+      logging.error('API Reqest Response empty {}'.format(app_get_response))
+      return False
 
     # Convert XML string Element to ElementTree
     response_xml = ET.ElementTree(ET.fromstring(app_get_response.content))
     # Get XML root element
     root = response_xml.getroot()
 
-    # Traverse XML response structure to get HOST_LIST
-    res_host_list = root[0][1]
-    res_date_time = root[0][0]
+    # Check if response xml is in simple return format if so there is an error message
+    if root.tag == 'SIMPLE_RETURN':
+      res_code = root.find('./RESPONSE/CODE')
+      res_text = root.find('./RESPONSE/TEXT')
+      print('API Reqest Response has an error Code: {} Message: {}'.format(res_code.text, res_text.text))
+      logging.error('API Reqest Response has an error Code: {} Message: {}'.format(res_code.text, res_text.text))
+      return False
+
+    # Traverse XML response structure
+    #res_host_list = root[0][1]
+    #res_date_time = root[0][0]
+    res_host_list = root.find('./RESPONSE/HOST_LIST')
+    res_date_time = root.find('./RESPONSE/DATETIME')
+    res_next_page_url = root.find('./RESPONSE/WARNING/URL')
+
+    #print(next_page_url.text)
 
     # Initialize empty list to store hosts
     host_list = []
@@ -107,10 +128,9 @@ class QualysAPIInventory(object):
 
 def main():
   # Get Transfer Requests search property and filter value
-  url_get_hosts = qualys_url_get_hosts
 
   qualysAPIInventory = QualysAPIInventory()
-  qualysAPIInventory.getHosts(url_get_hosts)
+  qualysAPIInventory.getHosts(qualys_base_url)
 
 if __name__ == "__main__":
   main()
