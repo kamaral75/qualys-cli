@@ -1,11 +1,8 @@
 import os, sys
-sys.path.append('./config')
-from config import *
-import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+#import xml.etree.ElementTree as ET
+import qualysapi
 import logging
-import xml.etree.ElementTree as ET
+from lxml import etree, objectify
 
 class QualysAPIInventory(object):
 
@@ -18,24 +15,42 @@ class QualysAPIInventory(object):
       filemode='a'
     )
 
-  def getHosts(self, qualys_base_url):
+  def getAssetHosts(self):
+    # Qualys API connection
+    qgc = qualysapi.connect('config/qualys_api_config.txt')
 
-    auth=(qualys_user, qualys_pwd)
-    headers={'X-Requested-With':'Python'}
+    # API url endpoint
+    call = '/api/2.0/fo/asset/host/'
 
-    get_hosts_url = qualys_base_url + 'host/?action=list&details=All'
+    # Parameters
+    parameters = {'action': 'list', 'details': 'All'}
 
-    app_get_response = self.getHTTP(url=get_hosts_url, params='', headers=headers, auth=auth)
+    # Get response
+    xml_output = qgc.request(call, parameters)
 
-    if app_get_response is None:
+    # Parse response
+    self.parseAssetHostsResponse(xml_output)
+
+  def parseAssetHostsResponse(self, xml_output):
+
+    if xml_output is None:
       print('API Reqest Response empty {}'.format(app_get_response))
       logging.error('API Reqest Response empty {}'.format(app_get_response))
       return False
 
     # Convert XML string Element to ElementTree
-    response_xml = ET.ElementTree(ET.fromstring(app_get_response.content))
+    #xml_etree = ET.ElementTree(ET.fromstring(xml_output.content))
     # Get XML root element
-    root = response_xml.getroot()
+    #root = xml_etree.getroot()
+    #xml_etree = etree.tostring(xml_output, encoding='unicode')
+
+    # works
+    xml_content = xml_output.decode('utf-8').encode('ascii')
+    xml_etree = etree.fromstring(xml_content)
+    elems = xml_etree.findall('.//HOST')
+    print(elems)
+
+    return False
 
     # Check if response xml is in simple return format if so there is an error message
     if root.tag == 'SIMPLE_RETURN':
@@ -46,18 +61,13 @@ class QualysAPIInventory(object):
       return False
 
     # Traverse XML response structure
-    #res_host_list = root[0][1]
-    #res_date_time = root[0][0]
     res_host_list = root.find('./RESPONSE/HOST_LIST')
     res_date_time = root.find('./RESPONSE/DATETIME')
     res_next_page_url = root.find('./RESPONSE/WARNING/URL')
 
-    #print(next_page_url.text)
-
     # Initialize empty list to store hosts
     host_list = []
 
-    count = 0
     # Iterate each host in HOST_LIST of response XML data
     for hosts in res_host_list:
       # Initialize empty dictionary to store a single host row
@@ -73,63 +83,10 @@ class QualysAPIInventory(object):
 
     print(host_list)
 
-
-  """ Configure requests module to retry session connection """
-  def requestsRetrySession(
-      self,
-      retries=3,
-      backoff_factor=0.3,
-      status_forcelist=(500, 502, 504),
-      session=None,
-  ):
-    session = session or requests.Session()
-    retry = Retry(
-        total=retries,
-        read=retries,
-        connect=retries,
-        backoff_factor=backoff_factor,
-        status_forcelist=status_forcelist,
-    )
-    adapter = HTTPAdapter(max_retries=retry)
-    session.mount('http://', adapter)
-    session.mount('https://', adapter)
-    return session
-
-  def getHTTP(self, url='', params='', headers='', auth=''):
-
-    try:
-      response = self.requestsRetrySession().get(
-          url=url,
-          params=params,
-          headers=headers,
-          auth=auth
-      )
-
-    except requests.exceptions.RequestException as e:
-      print('getHTTP unable to establish connection to url {}'.format(url))
-      logging.error('getHTTP unable to establish connection to url {}'.format(url))
-      logging.error('requests.exceptions.RequestException Error: {}'.format(e))
-    except Exception as x:
-      print('getHTTP unable to establish connection to url {}'.format(url))
-      logging.error('getHTTP unable to establish connection to url {}'.format(url))
-      logging.error('Error: {} {}'.format(x.__class__.__name__, x))
-    else:
-        return response
-      # Try if response body contains data
-      #try:
-      #  return response.json()
-      # Handle error if deserialization fails (because of no text)
-      #except ValueError as valerr:
-      #  logging.error(valerr)
-        # No results returned
-      #  return None
-
-
 def main():
-  # Get Transfer Requests search property and filter value
 
   qualysAPIInventory = QualysAPIInventory()
-  qualysAPIInventory.getHosts(qualys_base_url)
+  qualysAPIInventory.getAssetHosts()
 
 if __name__ == "__main__":
   main()

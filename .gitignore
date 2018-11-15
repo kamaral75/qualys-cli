@@ -1,3 +1,4 @@
 *.log
 *.pyc
 config.py
+qualys_api_config.txt
