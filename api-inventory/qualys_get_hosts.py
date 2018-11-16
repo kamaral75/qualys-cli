@@ -14,7 +14,7 @@ class QualysAPI(object):
       filemode='w'
     )
 
-  def getAssetHosts(self, id_min, page_number, host_list):
+  def getAssetHosts(self, id_min, host_list):
 
     # Initialize xml output
     xml_output = None
@@ -26,9 +26,6 @@ class QualysAPI(object):
     if id_min == 1:
       print('Getting first page of results id_min {}'.format(id_min))
       logging.info('Getting first page of results id_min {}'.format(id_min))
-
-    # Increment page number
-    page_number = page_number + 1
 
     # API url endpoint
     call = '/api/2.0/fo/asset/host/'
@@ -48,7 +45,7 @@ class QualysAPI(object):
     # Check if response is not empty
     if xml_output is not None:
       # Parse response
-      self.parseAssetHostsResponse(page_number, host_list, xml_output)
+      self.parseAssetHostsResponse(host_list, xml_output)
 
     # Check if output is empty
     if xml_output is None:
@@ -57,7 +54,7 @@ class QualysAPI(object):
       return False
 
 
-  def parseAssetHostsResponse(self, page_number, host_list, xml_output):
+  def parseAssetHostsResponse(self, host_list, xml_output):
 
     # Initialize next page url
     res_next_page_url = None
@@ -105,20 +102,18 @@ class QualysAPI(object):
         end = url.find('&',start)
         id_min_next = int(url[start:end])
 
-        print('Getting next page of results page_number {} id_min {}'.format(page_number, id_min_next))
-        logging.info('Getting next page of results page_number {} id_min {}'.format(id_min_next))
+        print('Getting next page of results id_min {}'.format(id_min_next))
+        logging.info('Getting next page of results id_min {}'.format(id_min_next))
 
         # Get next page of results
-        self.getAssetHosts(id_min_next, page_number, host_list)
+        self.getAssetHosts(id_min_next, host_list)
 
       # Else if next page url is empty
       else:
-        print('Last page of results page_number {} id_min {}'.format(page_number, id_min_next))
-        logging.info('Last page of results page_number {} id_min {}'.format(page_number, id_min_next))
-        print('Returning host list')
-        logging.info('Returning host list')
+        print('Last page of results has been reached. Returning host list.')
+        logging.info('Last page of results has been reached. Returning host list.')
 
-        return(host_list)
+        print(host_list)
 
     # Check if there were any errors getting the url
     except IndexError as indxerr:
@@ -128,7 +123,7 @@ def main():
   # Initialize QualysAPIInventory class
   qualysAPI = QualysAPI()
   # Start with first host id 1 and empty host list
-  qualysAPI.getAssetHosts(1, 0, [])
+  qualysAPI.getAssetHosts(1, [])
 
 if __name__ == "__main__":
   main()
