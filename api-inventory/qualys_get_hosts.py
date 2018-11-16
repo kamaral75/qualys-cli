@@ -116,8 +116,8 @@ class QualysAPI(object):
         print(host_list)
 
     # Check if there were any errors getting the url
-    except IndexError as indxerr:
-      logging.info('Unable to get pagination url id_min. Error: {}'.format(indxerr))
+    except IndexError as idxerr:
+      logging.info('Unable to get pagination url id_min. Error: {}'.format(idxerr))
 
 def main():
   # Initialize QualysAPIInventory class
