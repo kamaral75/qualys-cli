@@ -14,7 +14,7 @@ class QualysAPIInventory(object):
       filemode='a'
     )
 
-  def getAssetHosts(self):
+  def getAssetHosts(self, id_min):
     # Qualys API connection
     qgc = qualysapi.connect('config/qualys_api_config.txt')
 
@@ -22,7 +22,7 @@ class QualysAPIInventory(object):
     call = '/api/2.0/fo/asset/host/'
 
     # Parameters
-    parameters = {'action': 'list', 'details': 'All'}
+    parameters = {'action': 'list', 'details': 'All', 'id_min': id_min}
 
     # Get response
     xml_output = qgc.request(call, parameters)
@@ -52,9 +52,8 @@ class QualysAPIInventory(object):
       return False
 
     # Traverse XML response structure
-    res_host_list = root.find('./RESPONSE/HOST_LIST')
+    res_host_list = root.findall('.//HOST')
     res_date_time = root.find('./RESPONSE/DATETIME')
-    res_next_page_url = root.find('./RESPONSE/WARNING/URL')
 
     # Initialize empty list to store hosts
     host_list = []
@@ -63,8 +62,8 @@ class QualysAPIInventory(object):
     for hosts in res_host_list:
       # Initialize empty dictionary to store a single host row
       host_row = {}
+      # Iterate host list
       for host in hosts.iter():
-        # Iterate each data value in each host
         if not host.tag == 'HOST':
           # Append each key value pair to to host row dictionary
           # host.tag is the XML element name and host.text is the XML element value
@@ -72,12 +71,34 @@ class QualysAPIInventory(object):
       # Add each host to list of hosts
       host_list.append(host_row)
 
-    print(host_list)
+    #print(host_list)
+
+    try:
+      # Get next page url from response
+      res_next_page_url = root.find('./RESPONSE/WARNING/URL')
+
+      if res_next_page_url is not None:
+        url = res_next_page_url.text
+        # Parse url to get the new id_min value
+        start = url.find('id_min') + 7
+        end = url.find('&',start)
+        id_min = int(url[start:end])
+
+        print('Getting next page of results id_min {}').format(id_min)
+        self.getAssetHosts(id_min)
+
+      else:
+        print('Last page of results')
+
+    # If there is no last page the url will not have a value
+    except IndexError, e:
+      print('Unable to get pagination url id_min. Error: {}').format(e)
 
 def main():
-
+  # Initialize QualysAPIInventory class
   qualysAPIInventory = QualysAPIInventory()
-  qualysAPIInventory.getAssetHosts()
+  # Start with first host id 1
+  qualysAPIInventory.getAssetHosts(1)
 
 if __name__ == "__main__":
   main()
