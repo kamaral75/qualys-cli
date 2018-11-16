@@ -1,8 +1,7 @@
 import os, sys
-#import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET
 import qualysapi
 import logging
-from lxml import etree, objectify
 
 class QualysAPIInventory(object):
 
@@ -39,18 +38,10 @@ class QualysAPIInventory(object):
       return False
 
     # Convert XML string Element to ElementTree
-    #xml_etree = ET.ElementTree(ET.fromstring(xml_output.content))
+    xml_etree = ET.ElementTree(ET.fromstring(xml_output))
+
     # Get XML root element
-    #root = xml_etree.getroot()
-    #xml_etree = etree.tostring(xml_output, encoding='unicode')
-
-    # works
-    xml_content = xml_output.decode('utf-8').encode('ascii')
-    xml_etree = etree.fromstring(xml_content)
-    elems = xml_etree.findall('.//HOST')
-    print(elems)
-
-    return False
+    root = xml_etree.getroot()
 
     # Check if response xml is in simple return format if so there is an error message
     if root.tag == 'SIMPLE_RETURN':

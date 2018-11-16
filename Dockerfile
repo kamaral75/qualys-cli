@@ -4,7 +4,6 @@ FROM python:2.7-alpine
 RUN apk add --no-cache gcc musl-dev libxslt-dev && pip install pip==10.0.1
 
 # Install Python modules
-RUN pip2.7 install requests
 RUN pip2.7 install qualysapi
 RUN pip2.7 install six
 RUN pip2.7 install lxml
