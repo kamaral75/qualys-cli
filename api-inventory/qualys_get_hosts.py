@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 import qualysapi
 import logging
 
-class QualysAPIInventory(object):
+class QualysAPI(object):
 
   def __init__(self):
     # Configure logging module
@@ -14,9 +14,20 @@ class QualysAPIInventory(object):
       filemode='a'
     )
 
-  def getAssetHosts(self, id_min):
+  def getAssetHosts(self, id_min, host_list):
+
     # Qualys API connection
-    qgc = qualysapi.connect('config/qualys_api_config.txt')
+    try:
+      qgc = qualysapi.connect('config/qualys_api_config.txt')
+
+    except Exception as x:
+      print('Unable to connect to QualysAPI. Check hostname and credentials in configuration file. Error: {}'.format(x))
+      logging.error('Unable to connect to QualysAPI. Check hostname and credentials in configuration file. Error: {}'.format(x))
+
+    # Check if this iteration is the first page of results
+    if id_min == 1:
+      print('Getting first page of results id_min {}'.format(id_min))
+      logging.info('Getting first page of results id_min {}'.format(id_min))
 
     # API url endpoint
     call = '/api/2.0/fo/asset/host/'
@@ -28,9 +39,9 @@ class QualysAPIInventory(object):
     xml_output = qgc.request(call, parameters)
 
     # Parse response
-    self.parseAssetHostsResponse(xml_output)
+    self.parseAssetHostsResponse(xml_output, host_list)
 
-  def parseAssetHostsResponse(self, xml_output):
+  def parseAssetHostsResponse(self, xml_output, host_list):
 
     if xml_output is None:
       print('API Reqest Response empty {}'.format(app_get_response))
@@ -56,7 +67,7 @@ class QualysAPIInventory(object):
     res_date_time = root.find('./RESPONSE/DATETIME')
 
     # Initialize empty list to store hosts
-    host_list = []
+    #host_list = []
 
     # Iterate each host in HOST_LIST of response XML data
     for hosts in res_host_list:
@@ -84,21 +95,25 @@ class QualysAPIInventory(object):
         end = url.find('&',start)
         id_min = int(url[start:end])
 
-        print('Getting next page of results id_min {}').format(id_min)
-        self.getAssetHosts(id_min)
+        print('Getting next page of results id_min {}'.format(id_min))
+        logging.info('Getting next page of results id_min {}'.format(id_min))
+
+        # Get next page of results
+        self.getAssetHosts(id_min, host_list)
 
       else:
-        print('Last page of results')
+        print('Last page of results. Returning host list.')
+        return(host_list)
 
     # If there is no last page the url will not have a value
     except IndexError, e:
-      print('Unable to get pagination url id_min. Error: {}').format(e)
+      print('Unable to get pagination url id_min. Error: {}'.format(e))
 
 def main():
   # Initialize QualysAPIInventory class
-  qualysAPIInventory = QualysAPIInventory()
-  # Start with first host id 1
-  qualysAPIInventory.getAssetHosts(1)
+  qualysAPI = QualysAPI()
+  # Start with first host id 1 and empty host list
+  qualysAPI.getAssetHosts(1, [])
 
 if __name__ == "__main__":
   main()
