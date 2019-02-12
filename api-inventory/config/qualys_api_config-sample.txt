@@ -1,6 +1,0 @@
-[info]
-hostname = hostname 
-username = username
-password = password
-
-max_retries = 10
