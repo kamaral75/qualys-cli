@@ -1,14 +1,16 @@
+# Base image
 FROM python:2.7-alpine
-  
-# Install curl
-#RUN apk add --no-cache bash curl tzdata
+
+# Install requirements for lxml
+RUN apk add --no-cache gcc musl-dev libxslt-dev && pip install pip==10.0.1
 
 # Install Python modules
-RUN pip2.7 install requests
-
-# Fix the timezone
-#RUN rm -f /etc/localtime \
-#    && ln -s /usr/share/zoneinfo/America/New_York /etc/localtime
+# QualysAPI
+RUN pip2.7 install qualysapi
+# Requirement for lxml
+RUN pip2.7 install six
+# XML parser
+RUN pip2.7 install lxml
 
 # Copy code from repository to image
 COPY ./api-inventory /usr/src

@@ -8,11 +8,42 @@ class QualysAPI(object):
   def __init__(self):
     # Configure logging module
     logging.basicConfig(
-      filename='qualys_api_inventory.log',
+      filename='logs/qualys_api_inventory.log',
       level=logging.DEBUG,
       format="%(asctime)s:%(levelname)s:%(message)s",
       filemode='w'
     )
+
+  def getAssetIDs(self):
+
+    # Initialize xml output
+    xml_output = None
+
+    # Qualys API connection
+    qgc = qualysapi.connect('config/config.txt')
+
+    call = '/qps/rest/2.0/get/am/hostasset/77701130'
+
+    parameters = '{}'
+
+    # Get response
+    try:
+      xml_output = qgc.request(call, parameters)
+
+    except Exception as x:
+      print('Unable to connect to QualysAPI. Check hostname and credentials in configuration file. Error: {}'.format(x))
+      logging.error('Unable to connect to QualysAPI. Check hostname and credentials in configuration file. Error: {}'.format(x))
+      return False
+
+    # Check if output is empty
+    if xml_output is None:
+      print('QualysAPI returned an empty response {}'.format(xml_output))
+      logging.error('QualysAPI returned an empty response {}'.format(xml_output))
+      return False
+
+    print(xml_output)
+    return False
+
 
   def getAssetHosts(self, id_min, host_list):
 
@@ -53,6 +84,8 @@ class QualysAPI(object):
       logging.error('QualysAPI returned an empty response {}'.format(xml_output))
       return False
 
+    print(xml_output)
+    return False
 
   def parseAssetHostsResponse(self, host_list, xml_output):
 
@@ -123,7 +156,8 @@ def main():
   # Initialize QualysAPIInventory class
   qualysAPI = QualysAPI()
   # Start with first host id 1 and empty host list
-  qualysAPI.getAssetHosts(1, [])
+  #qualysAPI.getAssetHosts(1, [])
+  qualysAPI.getAssetIDs()
 
 if __name__ == "__main__":
   main()
