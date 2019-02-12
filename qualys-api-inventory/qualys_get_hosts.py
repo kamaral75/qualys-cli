@@ -24,7 +24,6 @@ class QualysAPI(object):
 
     call = '/qps/rest/2.0/get/am/hostasset/77701130'
 
-    #parameters = '<ServiceRequest><filters><Criteria field="lastVulnScan" operator="LESSER">1999-01-01</Criteria></filters></ServiceRequest>'
     parameters = '{}'
 
     # Get response
