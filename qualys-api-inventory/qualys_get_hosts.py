@@ -2,6 +2,9 @@ import os, sys
 import xml.etree.ElementTree as ET
 import qualysapi
 import logging
+import sys
+sys.path.append('config')
+from config import *
 
 class QualysAPI(object):
 
@@ -17,18 +20,16 @@ class QualysAPI(object):
   def getAssetIDs(self):
 
     # Initialize xml output
-    xml_output = None
+    host_ids = None
 
     # Qualys API connection
     qgc = qualysapi.connect('config/config.txt')
-
-    call = '/qps/rest/2.0/get/am/hostasset/77701130'
 
     parameters = '{}'
 
     # Get response
     try:
-      xml_output = qgc.request(call, parameters)
+      host_ids = qgc.request(id_url, parameters)
 
     except Exception as x:
       print('Unable to connect to QualysAPI. Check hostname and credentials in configuration file. Error: {}'.format(x))
@@ -36,14 +37,13 @@ class QualysAPI(object):
       return False
 
     # Check if output is empty
-    if xml_output is None:
-      print('QualysAPI returned an empty response {}'.format(xml_output))
-      logging.error('QualysAPI returned an empty response {}'.format(xml_output))
+    if host_ids is None:
+      print('QualysAPI returned an empty response {}'.format(host_ids))
+      logging.error('QualysAPI returned an empty response {}'.format(host_ids))
       return False
 
-    print(xml_output)
-    return False
-
+    print(host_ids)
+    return host_ids
 
   def getAssetHosts(self, id_min, host_list):
 
@@ -58,15 +58,12 @@ class QualysAPI(object):
       print('Getting first page of results id_min {}'.format(id_min))
       logging.info('Getting first page of results id_min {}'.format(id_min))
 
-    # API url endpoint
-    call = '/api/2.0/fo/asset/host/'
-
     # Parameters
     parameters = {'action': 'list', 'details': 'All', 'id_min': id_min}
 
     # Get response
     try:
-      xml_output = qgc.request(call, parameters)
+      xml_output = qgc.request(host_url, parameters)
 
     except Exception as x:
       print('Unable to connect to QualysAPI. Check hostname and credentials in configuration file. Error: {}'.format(x))
@@ -85,7 +82,7 @@ class QualysAPI(object):
       return False
 
     print(xml_output)
-    return False
+    return xml_output
 
   def parseAssetHostsResponse(self, host_list, xml_output):
 
@@ -155,9 +152,10 @@ class QualysAPI(object):
 def main():
   # Initialize QualysAPIInventory class
   qualysAPI = QualysAPI()
-  # Start with first host id 1 and empty host list
-  #qualysAPI.getAssetHosts(1, [])
-  qualysAPI.getAssetIDs()
+  # Get list of all asset IDs
+  host_ids = qualysAPI.getAssetIDs()
+  # Get asset hosts starting with offset 1
+  qualysAPI.getAssetHosts(1, [])
 
 if __name__ == "__main__":
   main()

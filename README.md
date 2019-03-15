@@ -3,8 +3,9 @@ A simple CLI for the purpose of gathering asset inventory from the Qualys API an
 
 ## Local Development Environment
 ### Step 1: Copy config file
-Based on the config-sample.txt create a file config.txt with the hostname, credentials and max retry value
-Do not commit the config file to the repository
+Based on config-sample.txt create a file config.txt with the hostname, credentials and max retry value. Based on config-sample.py create a file config.py with the API urls.
+
+The config files are excluded from the repository with gitignore. Do not commit the config files to the repository.
 
 ### Step 2: Build docker image
 ```docker build --no-cache -t qualys-local-dev .```

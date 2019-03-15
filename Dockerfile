@@ -13,7 +13,7 @@ RUN pip2.7 install six
 RUN pip2.7 install lxml
 
 # Copy code from repository to image
-COPY ./api-inventory /usr/src
+COPY ./qualys-api-inventory /usr/src
 
 # Start in default source directory
 WORKDIR /usr/src/
